@@ -40,6 +40,7 @@ struct ContentView: View {
                     }
                 }
                 .padding()
+                .frame(maxWidth: .infinity)
                 .background(Color.black)
                 .cornerRadius(8)
             }
@@ -54,9 +55,10 @@ struct ContentView: View {
                     Text("Send")
                         .foregroundColor(.white)
                         .padding()
-                        .background(Color.blue)
-                        .cornerRadius(8)
                 }
+
+                .background(Color.blue)
+                .cornerRadius(8)
                 .disabled(inputText.isEmpty || isLoading)
             }
             
