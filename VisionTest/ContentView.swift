@@ -54,12 +54,9 @@ struct ContentView: View {
                 Button(action: handleSendMessage) {
                     Text("Send")
                         .foregroundColor(.white)
-                        .padding()
+                        .cornerRadius(8)
+                        .disabled(inputText.isEmpty || isLoading)
                 }
-
-                .background(Color.blue)
-                .cornerRadius(8)
-                .disabled(inputText.isEmpty || isLoading)
             }
             
             if isChangingModel {
@@ -85,7 +82,7 @@ struct ContentView: View {
     func fetchInitialMessage() {
         isLoading = true
         
-        let url = URL(string: "http://localhost:8080/generate_chat")!
+        let url = URL(string: "https://f759-70-23-243-115.ngrok-free.app/generate_chat")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -127,7 +124,7 @@ struct ContentView: View {
         let newMessage = Message(role: "user", content: inputText)
         isLoading = true
         
-        let url = URL(string: "http://localhost:8080/generate_chat")!
+        let url = URL(string: "https://f759-70-23-243-115.ngrok-free.app/generate_chat")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
