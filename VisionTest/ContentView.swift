@@ -165,10 +165,156 @@ struct ChatView: View {
 
 
 struct ImagesView: View {
+    @State private var prompt: String = ""
+    @State private var generatedImage: String = ""
+    @State private var isLoading: Bool = false
+    @State private var model: String = "dall-e-3"
+    @State private var showImageHistory: Bool = true
+    @State private var imageHistory: [String] = []
+    
+    let modelOptions = ["dall-e-3", "dall-e-2"]
+    
     var body: some View {
-        Text("Images (TBD)")
-            .font(.largeTitle)
-            .foregroundColor(.gray)
+        VStack(spacing: 16) {
+                VStack {
+                    TextEditor(text: $prompt)
+                        .cornerRadius(8)
+                        .overlay(
+                            Group {
+                                if prompt.isEmpty {
+                                    Text("Enter a prompt for the image generator")
+                                        .foregroundColor(.gray)
+                                        .padding(.leading, 16)
+                                        .padding(.top, 16)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                        )
+                    
+                    Button(action: handleGenerateImage) {
+                        if isLoading {
+                            ProgressView()
+                        } else {
+                            Text("Generate Image")
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .cornerRadius(50)
+                    .disabled(prompt.isEmpty || isLoading)
+                    
+                    Picker("Model", selection: $model) {
+                        ForEach(modelOptions, id: \.self) {
+                            Text($0)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding(.top)
+                    
+                    if !generatedImage.isEmpty {
+                        AsyncImage(url: URL(string: generatedImage)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .border(Color.white, width: 8)
+                                .cornerRadius(12)
+                                .shadow(radius: 8)
+                        } placeholder: {
+                            ProgressView()
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top)
+                    }
+                }
+            
+            
+            if !imageHistory.isEmpty {
+                GroupBox {
+                    VStack {
+                        HStack {
+                            Text("Image History")
+                                .font(.headline)
+                            Spacer()
+                            Button(action: {
+                                imageHistory = []
+                                // TODO: Remove image history from local storage
+                            }) {
+                                Text("Clear History")
+                                    .foregroundColor(.red)
+                            }
+                        }
+                        
+                        if showImageHistory {
+                            ScrollView {
+                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 16) {
+                                    ForEach(imageHistory, id: \.self) { item in
+                                        Button(action: {
+                                            generatedImage = item
+                                        }) {
+                                            AsyncImage(url: URL(string: item)) { image in
+                                                image
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(height: 100)
+                                                    .cornerRadius(8)
+                                            } placeholder: {
+                                                ProgressView()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Text("Image history hidden")
+                                .foregroundColor(.gray)
+                        }
+                    }
+                }
+            }
+        }
+        .padding()
+        .onAppear {
+            // TODO: Load image history from local storage
+        }
+    }
+    
+    func handleGenerateImage() {
+        isLoading = true
+        
+        let url = URL(string: "https://f759-70-23-243-115.ngrok-free.app/generate_image")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "model": model,
+            "prompt": prompt,
+            "size": "1024x1024",
+            "quality": "standard",
+            "n": 1
+        ]
+        
+        let jsonData = try? JSONSerialization.data(withJSONObject: body)
+        request.httpBody = jsonData
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error:", error)
+                DispatchQueue.main.async {
+                    isLoading = false
+                }
+                return
+            }
+            
+            if let data = data, let responseText = String(data: data, encoding: .utf8) {
+                DispatchQueue.main.async {
+                    generatedImage = responseText
+                    imageHistory.insert(responseText, at: 0)
+                    // TODO: Save image history to local storage
+                    isLoading = false
+                }
+            }
+        }.resume()
     }
 }
 
