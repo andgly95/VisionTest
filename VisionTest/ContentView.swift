@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  VisionTest
-//
-//  Created by Andrew Glyadchenko on 12/23/23.
-//
-
 import SwiftUI
 import RealityKit
 import RealityKitContent
@@ -16,6 +9,22 @@ struct Message: Identifiable {
 }
 
 struct ContentView: View {
+    var body: some View {
+        TabView {
+            ChatView()
+                .tabItem {
+                    Label("Chat", systemImage: "message")
+                }
+            
+            ImagesView()
+                .tabItem {
+                    Label("Images", systemImage: "photo")
+                }
+        }
+    }
+}
+
+struct ChatView: View {
     @State private var messages: [Message] = []
     @State private var inputText: String = ""
     @State private var isLoading: Bool = false
@@ -77,7 +86,6 @@ struct ContentView: View {
         .padding()
         .onAppear(perform: fetchInitialMessage)
     }
-    
     
     func fetchInitialMessage() {
         isLoading = true
@@ -154,6 +162,16 @@ struct ContentView: View {
         }.resume()
     }
 }
+
+
+struct ImagesView: View {
+    var body: some View {
+        Text("Images (TBD)")
+            .font(.largeTitle)
+            .foregroundColor(.gray)
+    }
+}
+
 #Preview(windowStyle: .automatic) {
     ContentView()
 }
